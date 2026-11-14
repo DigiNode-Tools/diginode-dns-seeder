@@ -16,9 +16,14 @@
 
 #define MIN_IP_RETURNED 20
 
+// Set by --minheight; -1 = use the default below.
+extern int nRequireHeightOverride;
 static inline int GetRequireHeight(const bool testnet = fTestNet)
 {
-    return testnet ? 2755000 : 18701000;
+    if (nRequireHeightOverride >= 0) return nRequireHeightOverride;
+    // Testnet: DigiByte Core v9's testnet26 is a new chain that started again
+    // from block 0, so an old minimum (2755000) would reject every node.
+    return testnet ? 0 : 18701000;
 }
 
 std::string static inline ToString(const CService &ip) {

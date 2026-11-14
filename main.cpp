@@ -4,6 +4,7 @@
 #include <inttypes.h>
 #include <pthread.h>
 #include <signal.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
@@ -15,6 +16,21 @@
 using namespace std;
 
 bool fTestNet = false;
+unsigned short nP2PPortOverride = 0;
+int nRequireHeightOverride = -1;
+
+// Parses 8 hex digits (e.g. fec6b9e7) into the 4 message-start bytes.
+static bool ParseMagic(const char *hex, unsigned char out[4]) {
+  if (strlen(hex) != 8) return false;
+  for (int i = 0; i < 4; i++) {
+    char byte[3] = { hex[i*2], hex[i*2+1], 0 };
+    char *end;
+    unsigned long v = strtoul(byte, &end, 16);
+    if (*end != 0) return false;
+    out[i] = (unsigned char)v;
+  }
+  return true;
+}
 
 class CDnsSeedOpts {
 public:
@@ -31,9 +47,11 @@ public:
   const char *ip_addr;
   const char *ipv4_proxy;
   const char *ipv6_proxy;
+  const char *magic;
+  std::vector<std::string> extra_seeds;
   std::set<uint64_t> filter_whitelist;
 
-  CDnsSeedOpts() : nThreads(96), nDnsThreads(4), ip_addr("::"), nPort(53), mbox(NULL), ns(NULL), host(NULL), tor(NULL), fUseTestNet(false), fWipeBan(false), fWipeIgnore(false), ipv4_proxy(NULL), ipv6_proxy(NULL) {}
+  CDnsSeedOpts() : nThreads(96), nDnsThreads(4), ip_addr("::"), nPort(53), mbox(NULL), ns(NULL), host(NULL), tor(NULL), fUseTestNet(false), fWipeBan(false), fWipeIgnore(false), ipv4_proxy(NULL), ipv6_proxy(NULL), magic(NULL) {}
 
   void ParseCommandLine(int argc, char **argv) {
     static const char *help = "DigiByte-seeder\n"
@@ -54,6 +72,13 @@ public:
                               "--testnet       Use testnet\n"
                               "--wipeban       Wipe list of banned nodes\n"
                               "--wipeignore    Wipe list of ignored nodes\n"
+                              "--p2pport <n>   P2P port nodes must use (default 12024, testnet 12033)\n"
+                              "--magic <hex>   Network message start, 8 hex digits\n"
+                              "                (default fac3b6da, testnet fec6b9e7)\n"
+                              "--minheight <n> Lowest block height a node may report\n"
+                              "                (default 18701000, testnet 0)\n"
+                              "--seed <host>   Extra DNS seed or node to start crawling from\n"
+                              "                (can be given more than once)\n"
                               "-?, --help      Show this text\n"
                               "\n";
     bool showHelp = false;
@@ -73,7 +98,11 @@ public:
         {"filter", required_argument, 0, 'w'},
         {"testnet", no_argument, &fUseTestNet, 1},
         {"wipeban", no_argument, &fWipeBan, 1},
-        {"wipeignore", no_argument, &fWipeBan, 1},
+        {"wipeignore", no_argument, &fWipeIgnore, 1},
+        {"p2pport", required_argument, 0, 1001},
+        {"magic", required_argument, 0, 1002},
+        {"minheight", required_argument, 0, 1003},
+        {"seed", required_argument, 0, 1004},
         {"help", no_argument, 0, '?'},
         {0, 0, 0, 0}
       };
@@ -128,6 +157,39 @@ public:
 
         case 'o': {
           tor = optarg;
+          break;
+        }
+
+        case 1001: {
+          int p = strtol(optarg, NULL, 10);
+          if (p > 0 && p < 65536) {
+            nP2PPortOverride = p;
+          } else {
+            fprintf(stderr, "Invalid --p2pport: %s\n", optarg);
+            exit(1);
+          }
+          break;
+        }
+
+        case 1002: {
+          magic = optarg;
+          break;
+        }
+
+        case 1003: {
+          char *end;
+          long h = strtol(optarg, &end, 10);
+          if (*end == 0 && h >= 0) {
+            nRequireHeightOverride = (int)h;
+          } else {
+            fprintf(stderr, "Invalid --minheight: %s\n", optarg);
+            exit(1);
+          }
+          break;
+        }
+
+        case 1004: {
+          extra_seeds.push_back(optarg);
           break;
         }
 
@@ -395,6 +457,9 @@ extern "C" void* ThreadDumper(void*) {
 }
 
 extern "C" void* ThreadStats(void*) {
+  // In a terminal: one line, redrawn every second. Otherwise (e.g. a systemd
+  // service, whose output goes to the journal): a plain line every 10 minutes.
+  const bool tty = isatty(fileno(stdout));
   bool first = true;
   do {
     char c[256];
@@ -403,22 +468,24 @@ extern "C" void* ThreadStats(void*) {
     strftime(c, 256, "[%y-%m-%d %H:%M:%S]", tmp);
     CAddrDbStats stats;
     db.GetStats(stats);
-    if (first)
-    {
-      first = false;
-      printf("\n\n\n\x1b[3A");
+    if (tty) {
+      if (first)
+      {
+        first = false;
+        printf("\n\n\n\x1b[3A");
+      }
+      else
+        printf("\x1b[2K\x1b[u");
+      printf("\x1b[s");
     }
-    else
-      printf("\x1b[2K\x1b[u");
-    printf("\x1b[s");
     uint64_t requests = 0;
     uint64_t queries = 0;
     for (unsigned int i=0; i<dnsThread.size(); i++) {
       requests += dnsThread[i]->dns_opt.nRequests;
       queries += dnsThread[i]->dbQueries;
     }
-    printf("%s %i/%i available (%i tried in %is, %i new, %i active), %i banned; %llu DNS requests, %llu db queries", c, stats.nGood, stats.nAvail, stats.nTracked, stats.nAge, stats.nNew, stats.nAvail - stats.nTracked - stats.nNew, stats.nBanned, (unsigned long long)requests, (unsigned long long)queries);
-    Sleep(1000);
+    printf("%s %i/%i available (%i tried in %is, %i new, %i active), %i banned; %llu DNS requests, %llu db queries%s", c, stats.nGood, stats.nAvail, stats.nTracked, stats.nAge, stats.nNew, stats.nAvail - stats.nTracked - stats.nNew, stats.nBanned, (unsigned long long)requests, (unsigned long long)queries, tty ? "" : "\n");
+    Sleep(tty ? 1000 : 600000);
   } while(1);
   return nullptr;
 }
@@ -428,18 +495,24 @@ extern "C" void* ThreadStats(void*) {
 // via the #DGBCIT channel on the DigiByte Discord server: https://discord.com/channels/878200503815782400/1133815334013509764
 // Alternatively, create an issue ticket here: https://github.com/DigiByte-Core/digibyte/issues
 
-static const string mainnet_seeds[] = {"seed.digibyte.io", "seed.digibyte.org", "seed.digibyteblockchain.org", "seed.digibyte.help", "eu.digibyteseed.com", "seed.digibyte.link", "seed.quakeguy.com", "seed.digibyte.services", ""};
-static const string testnet_seeds[] = {"testseed.digibyteblockchain.org", "testnetseed.digibyte.help", "testnet.digibyteseed.com", "testnetseed.digibyte.link", "testnetseed.digibyte.services", ""};
+// The same DNS seeds as DigiByte Core v9.26.7 (src/kernel/chainparams.cpp).
+// Add more with --seed.
+static const string mainnet_seeds[] = {"seed.digibyte.io", "seed.diginode.tools", "seed.digibyte.link", "seed.aroundtheblock.app", "seed.tuyul.cc", ""};
+static const string testnet_seeds[] = {"testnetseed.digibyte.io", "testnetseed.digibyte.link", "testnetseed.digibyte.services", ""};
 static const string *seeds = mainnet_seeds;
+static std::vector<std::string> extra_seeds;
 
 extern "C" void* ThreadSeeder(void*) {
   if (!fTestNet){
     db.Add(CService("81.153.89.168", 12024), true);
   }
   do {
-    for (int i=0; seeds[i] != ""; i++) {
+    std::vector<std::string> all;
+    for (int i=0; seeds[i] != ""; i++) all.push_back(seeds[i]);
+    all.insert(all.end(), extra_seeds.begin(), extra_seeds.end());
+    for (size_t i = 0; i < all.size(); i++) {
       vector<CNetAddr> ips;
-      LookupHost(seeds[i].c_str(), ips);
+      LookupHost(all[i].c_str(), ips);
       for (vector<CNetAddr>::iterator it = ips.begin(); it != ips.end(); it++) {
         db.Add(CService(*it, GetDefaultPort()), true);
       }
@@ -486,13 +559,25 @@ int main(int argc, char **argv) {
   bool fDNS = true;
   if (opts.fUseTestNet) {
       printf("Using testnet.\n");
-      pchMessageStart[0] = 0xfd;
-      pchMessageStart[1] = 0xc8;
-      pchMessageStart[2] = 0xbd;
-      pchMessageStart[3] = 0xdd;
+      // DigiByte Core v9 (testnet26). v8's testnet used fdc8bddd on port 12026:
+      // use --magic fdc8bddd --p2pport 12026 --minheight 2755000 for that.
+      pchMessageStart[0] = 0xfe;
+      pchMessageStart[1] = 0xc6;
+      pchMessageStart[2] = 0xb9;
+      pchMessageStart[3] = 0xe7;
       seeds = testnet_seeds;
       fTestNet = true;
   }
+  if (opts.magic) {
+    if (!ParseMagic(opts.magic, pchMessageStart)) {
+      fprintf(stderr, "Invalid --magic: %s (expected 8 hex digits)\n", opts.magic);
+      exit(1);
+    }
+  }
+  extra_seeds = opts.extra_seeds;
+  printf("Network: magic %02x%02x%02x%02x, P2P port %u, minimum height %i\n",
+         pchMessageStart[0], pchMessageStart[1], pchMessageStart[2], pchMessageStart[3],
+         (unsigned)GetDefaultPort(), GetRequireHeight());
   if (!opts.ns) {
     printf("No nameserver set. Not starting DNS server.\n");
     fDNS = false;

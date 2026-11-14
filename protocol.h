@@ -16,9 +16,13 @@
 #include "uint256.h"
 
 extern bool fTestNet;
+// Set by --p2pport; 0 = use the default below.
+extern unsigned short nP2PPortOverride;
 static inline unsigned short GetDefaultPort(const bool testnet = fTestNet)
 {
-    return testnet ? 12034 : 12024;
+    if (nP2PPortOverride) return nP2PPortOverride;
+    // Testnet: DigiByte Core v9 (testnet26) uses 12033.
+    return testnet ? 12033 : 12024;
 }
 
 //
