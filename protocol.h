@@ -15,15 +15,12 @@
 #include <string>
 #include "uint256.h"
 
-extern bool fTestNet;
-// Set by --p2pport; 0 = use the default below.
-extern unsigned short nP2PPortOverride;
-static inline unsigned short GetDefaultPort(const bool testnet = fTestNet)
-{
-    if (nP2PPortOverride) return nP2PPortOverride;
-    // Testnet: DigiByte Core v9 (testnet26) uses 12033.
-    return testnet ? 12033 : 12024;
-}
+// Network settings, set at startup from --chain and the options that
+// override it (see main.cpp).
+extern unsigned short nP2PPort;       // P2P port nodes must listen on
+extern uint64_t nLocalServices;       // service bits we advertise in "version"
+extern std::string strUserAgent;      // our user agent in "version"
+static inline unsigned short GetDefaultPort() { return nP2PPort; }
 
 //
 // Message header
