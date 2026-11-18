@@ -155,6 +155,6 @@ Each network is one entry in the `kChains` table at the top of `main.cpp`: its m
 
 ## Licence
 
-The seeder is free and open-source software. The code from Bitcoin and DigiByte is under the MIT licence, as its file headers say; the crawler and DNS server come from Pieter Wuille's bitcoin-seeder. DigiNode Tools' changes are also MIT.
+DigiNode Tools' changes are under the MIT licence. The code from Bitcoin keeps its MIT licence, and the crawler and DNS server come from Pieter Wuille's bitcoin-seeder, which doesn't state a licence. [LICENSE](LICENSE) has the details.
 
 DigiNode Seeder, the setup script, has its own licence: see its [repository](https://github.com/DigiNode-Tools/diginode-seeder-setup).
