@@ -19,7 +19,7 @@
 
 using namespace std;
 
-#define SEEDER_VERSION "0.1.0"
+#define SEEDER_VERSION "0.2.0"
 
 // Network settings (declared in protocol.h and db.h). main() fills them in
 // from the chosen chain, then from any options that override it.
