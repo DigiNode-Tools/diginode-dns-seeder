@@ -19,7 +19,7 @@
 
 using namespace std;
 
-#define SEEDER_VERSION "0.2.0"
+#define SEEDER_VERSION "0.2.1"
 
 // Network settings (declared in protocol.h and db.h). main() fills them in
 // from the chosen chain, then from any options that override it.
@@ -51,26 +51,58 @@ struct ChainParams {
   std::vector<std::string> nodes;  // fixed IP addresses to start crawling from
 };
 
+// Each seed and fixed node is labelled: what it is, who maintains it (GitHub handle, where known), and
+// when it was last checked (and how it answered). DigiByte's owners are from DigiByte Core's chainparams.cpp.
+// Nito Core's seed lines have no owners; both mainnet seeds were added by @biigbang0001 (Nito Core v4).
+// Keep these up to date when the node software's lists change.
 static const std::vector<ChainParams> kChains = {
   // DigiByte Core v8/v9 mainnet. Seeds as in DigiByte Core v9.26.7.
   {"digibyte", "DigiByte", "digibyte-testnet", "fac3b6da", 12024, 18701000, 70017, 0, 0, 0,
-   {"seed.digibyte.io", "seed.diginode.tools", "seed.digibyte.link", "seed.aroundtheblock.app", "seed.tuyul.cc"},
-   {"81.153.89.168"}},
+   {
+     "seed.digibyte.io",          // @JaredTate. Plain A record, not a seeder (1 node). Checked 2026-11-18.
+     "seed.diginode.tools",       // @saltedlolly. DigiNode Seeder (24 nodes). Checked 2026-11-18.
+     "seed.digibyte.link",        // @bastiandriessen. Seeder (25 nodes). Checked 2026-11-18.
+     "seed.aroundtheblock.app",   // @JohnnyLawDGB. Seeder (24 nodes). Checked 2026-11-18.
+     "seed.tuyul.cc",             // @mbah_jambon. Seeder (25 nodes). Checked 2026-11-18.
+   },
+   // No fixed nodes: the five seeds above are enough. (81.153.89.168, a home connection added in 2017, was
+   // removed on 2026-11-18: it no longer answers, and a home IP may now belong to someone else.)
+   {}},
   // DigiByte Core v9 testnet (testnet26), a new chain started again from
   // block 0. v8's testnet used fdc8bddd on port 12026 (minimum height 2755000).
   {"digibyte-testnet", "DigiByte testnet", NULL, "fec6b9e7", 12033, 0, 70017, 0, 0, 0,
-   {"testnetseed.digibyte.io", "testnetseed.digibyte.link", "testnetseed.digibyte.services"},
+   {
+     "testnetseed.digibyte.io",        // @JaredTate. Plain A record (1 node). Checked 2026-11-18.
+     "testnetseed.digibyte.link",      // @bastiandriessen. Seeder (1 node). Checked 2026-11-18.
+     "testnetseed.digibyte.services",  // @cdonnachie. Doesn't exist (NXDOMAIN). Checked 2026-11-18.
+     "testnetseed.diginode.tools",     // @saltedlolly. DigiNode Seeder (9 nodes). Checked 2026-11-18.
+   },
    {}},
   // Nito Core v4 mainnet. From the v4 hard fork (block 1,165,432) v4 nodes
   // drop peers that don't use protocol 70017 and advertise NITO_PRIVATE, and
   // Nito Core asks seeds for x1000009 (NETWORK | WITNESS | NITO_PRIVATE). So
   // only v4 nodes are listed, and the seeder advertises NITO_PRIVATE itself.
   {"nito", "Nito", "nito-testnet", "b6c0c0b6", 8820, 1100000, 70017, NODE_NITO_PRIVATE, NODE_NITO_PRIVATE, NODE_NITO_PRIVATE,
-   {"seed.nito.network", "seed.nitopool.online"},
-   {"88.198.163.206", "217.160.149.211", "87.106.216.17"}},
-  // Nito Core v4 testnet3 (private transactions active from block 0).
+   {
+     "seed.nito.network",         // Nito project (added to Nito Core by @biigbang0001). Plain A record (1 node). Checked 2026-11-18.
+     "seed.nitopool.online",      // Nitopool (added to Nito Core by @biigbang0001). Plain A record (1 node). Checked 2026-11-18.
+     "seed.nito.tools",           // @saltedlolly. DigiNode Seeder. Not live yet (2026-11-18).
+   },
+   {
+     "88.198.163.206",            // @saltedlolly. explorer.nito.tools server, Nito Core v4.0.0. Checked 2026-11-18.
+     "217.160.149.211",           // The node seed.nito.network points to (maintainer not stated). Checked 2026-11-18.
+     "87.106.216.17",             // The node seed.nitopool.online points to (maintainer not stated). Checked 2026-11-18.
+   }},
+  // Nito Core v4 testnet3 (private transactions active from block 0). No seed or node works yet, so a Nito
+  // testnet seeder needs --seed <node> to start.
   {"nito-testnet", "Nito testnet", NULL, "cd9b721a", 8840, 0, 70017, NODE_NITO_PRIVATE, NODE_NITO_PRIVATE, NODE_NITO_PRIVATE,
-   {"t1.testnet.nito.network", "t2.testnet.nito.network", "t3.testnet.nito.network", "testnet-seed.nito.network"},
+   {
+     "t1.testnet.nito.network",   // From Nito Core (maintainer not stated). Doesn't exist (NXDOMAIN). Checked 2026-11-18.
+     "t2.testnet.nito.network",   // From Nito Core (maintainer not stated). Doesn't exist (NXDOMAIN). Checked 2026-11-18.
+     "t3.testnet.nito.network",   // From Nito Core (maintainer not stated). Doesn't exist (NXDOMAIN). Checked 2026-11-18.
+     "testnet-seed.nito.network", // From Nito Core (maintainer not stated). Doesn't exist (NXDOMAIN). Checked 2026-11-18.
+     "testnetseed.nito.tools",    // @saltedlolly. DigiNode Seeder. Not live yet (2026-11-18).
+   },
    {}},
 };
 
