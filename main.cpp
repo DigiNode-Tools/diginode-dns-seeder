@@ -52,25 +52,46 @@ struct ChainParams {
 };
 
 static const std::vector<ChainParams> kChains = {
-  // DigiByte Core v8/v9 mainnet. Seeds as in DigiByte Core v9.26.7.
+  // DigiByte Core v8/v9 mainnet. Seeds as in DigiByte Core v9.26.7, with their owners.
   {"digibyte", "DigiByte", "digibyte-testnet", "fac3b6da", 12024, 18701000, 70017, 0, 0, 0,
-   {"seed.digibyte.io", "seed.diginode.tools", "seed.digibyte.link", "seed.aroundtheblock.app", "seed.tuyul.cc"},
+   {
+     "seed.digibyte.io",          // Jared Tate @JaredTate
+     "seed.diginode.tools",       // Olly Stedall @saltedlolly
+     "seed.digibyte.link",        // Bastian Driessen @bastiandriessen
+     "seed.aroundtheblock.app",   // Mark McNiel @JohnnyLawDGB
+     "seed.tuyul.cc",             // Mbah Jambon @mbah_jambon
+   },
    {"81.153.89.168"}},
   // DigiByte Core v9 testnet (testnet26), a new chain started again from
   // block 0. v8's testnet used fdc8bddd on port 12026 (minimum height 2755000).
   {"digibyte-testnet", "DigiByte testnet", NULL, "fec6b9e7", 12033, 0, 70017, 0, 0, 0,
-   {"testnetseed.digibyte.io", "testnetseed.digibyte.link", "testnetseed.digibyte.services"},
+   {
+     "testnetseed.digibyte.io",        // Jared Tate @JaredTate
+     "testnetseed.digibyte.link",      // Bastian Driessen @bastiandriessen
+     "testnetseed.digibyte.services",  // Craig Donnachie @cdonnachie
+     "testnetseed.diginode.tools",     // Olly Stedall @saltedlolly
+   },
    {}},
   // Nito Core v4 mainnet. From the v4 hard fork (block 1,165,432) v4 nodes
   // drop peers that don't use protocol 70017 and advertise NITO_PRIVATE, and
   // Nito Core asks seeds for x1000009 (NETWORK | WITNESS | NITO_PRIVATE). So
   // only v4 nodes are listed, and the seeder advertises NITO_PRIVATE itself.
   {"nito", "Nito", "nito-testnet", "b6c0c0b6", 8820, 1100000, 70017, NODE_NITO_PRIVATE, NODE_NITO_PRIVATE, NODE_NITO_PRIVATE,
-   {"seed.nito.network", "seed.nitopool.online"},
+   {
+     "seed.nito.network",         // Nito (added to Nito Core by @biigbang0001)
+     "seed.nitopool.online",      // Nitopool (added to Nito Core by @biigbang0001)
+     "seed.nito.tools",           // Olly Stedall @saltedlolly
+   },
    {"88.198.163.206", "217.160.149.211", "87.106.216.17"}},
   // Nito Core v4 testnet3 (private transactions active from block 0).
   {"nito-testnet", "Nito testnet", NULL, "cd9b721a", 8840, 0, 70017, NODE_NITO_PRIVATE, NODE_NITO_PRIVATE, NODE_NITO_PRIVATE,
-   {"t1.testnet.nito.network", "t2.testnet.nito.network", "t3.testnet.nito.network", "testnet-seed.nito.network"},
+   {
+     "t1.testnet.nito.network",   // Nito (from Nito Core)
+     "t2.testnet.nito.network",   // Nito (from Nito Core)
+     "t3.testnet.nito.network",   // Nito (from Nito Core)
+     "testnet-seed.nito.network", // Nito (from Nito Core)
+     "testnetseed.nito.tools",    // Olly Stedall @saltedlolly
+   },
    {}},
 };
 
