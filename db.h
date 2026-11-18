@@ -12,19 +12,14 @@
 
 #define MIN_RETRY 1000
 
-#define REQUIRE_VERSION 70017
-
 #define MIN_IP_RETURNED 20
 
-// Set by --minheight; -1 = use the default below.
-extern int nRequireHeightOverride;
-static inline int GetRequireHeight(const bool testnet = fTestNet)
-{
-    if (nRequireHeightOverride >= 0) return nRequireHeightOverride;
-    // Testnet: DigiByte Core v9's testnet26 is a new chain that started again
-    // from block 0, so an old minimum (2755000) would reject every node.
-    return testnet ? 0 : 18701000;
-}
+// Network settings, set at startup from --chain and the options that
+// override it (see main.cpp).
+extern int nRequireHeight;            // lowest block height a good node may report
+extern int nRequireVersion;           // lowest protocol version a good node may use
+extern uint64_t nRequireServices;     // service bits a good node must advertise
+static inline int GetRequireHeight() { return nRequireHeight; }
 
 std::string static inline ToString(const CService &ip) {
   std::string str = ip.ToString();
@@ -110,8 +105,9 @@ public:
   bool IsGood() const {
     if (ip.GetPort() != GetDefaultPort()) return false;
     if (!(services & NODE_NETWORK)) return false;
+    if ((services & nRequireServices) != nRequireServices) return false;
     if (!ip.IsRoutable()) return false;
-    if (clientVersion && clientVersion < REQUIRE_VERSION) return false;
+    if (clientVersion && clientVersion < nRequireVersion) return false;
     if (blocks && blocks < GetRequireHeight()) return false;
 
     if (total <= 3 && success * 2 >= total) return true;
@@ -252,10 +248,11 @@ public:
   std::vector<CAddrReport> GetAll() {
     std::vector<CAddrReport> ret;
     SHARED_CRITICAL_BLOCK(cs) {
-      for (std::deque<int>::const_iterator it = ourId.begin(); it != ourId.end(); it++) {
-        const CAddrInfo &info = idToInfo[*it];
-        if (info.success > 0) {
-          ret.push_back(info.GetReport());
+      // Walk the whole table, not just ourId: nodes being tested right now are
+      // out of ourId, and on a small network that can be all of them.
+      for (std::map<int, CAddrInfo>::const_iterator it = idToInfo.begin(); it != idToInfo.end(); it++) {
+        if (it->second.success > 0) {
+          ret.push_back(it->second.GetReport());
         }
       }
     }
@@ -275,15 +272,14 @@ public:
     READWRITE(nVersion);
     SHARED_CRITICAL_BLOCK(cs) {
       if (fWrite) {
+        // Save every entry in the table (banned ones are already removed from it),
+        // including nodes that are being tested and so are in neither ourId nor
+        // unkId. Saving only those two lists could write an empty file on a small
+        // network, losing all known peers at the next restart.
         CAddrDb *db = const_cast<CAddrDb*>(this);
-        int n = ourId.size() + unkId.size();
+        int n = db->idToInfo.size();
         READWRITE(n);
-        for (std::deque<int>::const_iterator it = ourId.begin(); it != ourId.end(); it++) {
-          std::map<int, CAddrInfo>::iterator ci = db->idToInfo.find(*it);
-          READWRITE((*ci).second);
-        }
-        for (std::set<int>::const_iterator it = unkId.begin(); it != unkId.end(); it++) {
-          std::map<int, CAddrInfo>::iterator ci = db->idToInfo.find(*it);
+        for (std::map<int, CAddrInfo>::iterator ci = db->idToInfo.begin(); ci != db->idToInfo.end(); ci++) {
           READWRITE((*ci).second);
         }
       } else {

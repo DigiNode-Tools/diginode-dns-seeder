@@ -76,13 +76,12 @@ class CNode {
   void PushVersion() {
     int64 nTime = time(NULL);
     uint64 nLocalNonce = BITCOIN_SEED_NONCE;
-    int64 nLocalServices = 0;
     CAddress me(CService("0.0.0.0"));
     BeginMessage("version");
     int nBestHeight = GetRequireHeight();
-    string ver = "/digibyte-seeder:0.01/";
+    string ver = strUserAgent;
     uint8_t fRelayTxs = 0;
-    vSend << PROTOCOL_VERSION << nLocalServices << nTime << you << me << nLocalNonce << ver << nBestHeight << fRelayTxs;;
+    vSend << PROTOCOL_VERSION << (uint64)nLocalServices << nTime << you << me << nLocalNonce << ver << nBestHeight << fRelayTxs;;
     EndMessage();
   }
  
