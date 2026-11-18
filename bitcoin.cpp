@@ -244,8 +244,11 @@ public:
         vRecv.resize(nPos + nBytes);
         memcpy(&vRecv[nPos], pchBuf, nBytes);
       } else if (nBytes == 0) {
-        // printf("%s: BAD (connection closed prematurely)\n", ToString(you).c_str());
-        res = false;
+        // The node closed the connection. Before the handshake that's a failure; after it, the node has
+        // shown it's reachable and on this network (some, e.g. on Litecoin's testnet, hang up on a peer
+        // like the seeder before answering getaddr), so it counts, just without new addresses.
+        // printf("%s: connection closed (%s handshake)\n", ToString(you).c_str(), doneAfter ? "after" : "before");
+        if (!doneAfter) res = false;
         break;
       } else {
         // printf("%s: BAD (connection error)\n", ToString(you).c_str());

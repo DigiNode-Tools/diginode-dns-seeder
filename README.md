@@ -2,13 +2,13 @@
 
 A DNS seeder for several blockchain networks. It crawls a network's nodes, keeps track of which ones are reliable and up to date, and serves a list of them from its own small DNS server. New nodes use DNS seeds like this to find their first peers.
 
-It currently supports **DigiByte** and **Nito**, mainnet and testnet, chosen with `--chain`. One server can run a seeder for each, side by side.
+It currently supports **DigiByte**, **Nito** and **Litecoin**, mainnet and testnet, chosen with `--chain`. One server can run a seeder for each, side by side.
 
 It's part of [DigiNode Tools](https://diginode.tools), and is the seeder that [DigiNode Seeder](https://github.com/DigiNode-Tools/diginode-seeder-setup) installs. It's based on Pieter Wuille's [bitcoin-seeder](https://github.com/sipa/bitcoin-seeder), by way of DigiByte's seeder.
 
 ## The easy way: DigiNode Seeder
 
-To set up DigiByte seeders on a Linux server with one command, use **DigiNode Seeder**:
+To set up seeders on a Linux server with one command, use **DigiNode Seeder**:
 
 ```
 curl -sSL https://seedsetup.diginode.tools | sudo bash
@@ -16,7 +16,7 @@ curl -sSL https://seedsetup.diginode.tools | sudo bash
 
 It builds this seeder, runs a seeder for each network you choose as a hardened systemd service, routes each seed name to the right seeder on port 53, checks your DNS records, and keeps everything up to date. See the [DigiNode Seeder guide](https://diginode.tools/diginode-seeder/).
 
-DigiNode Seeder doesn't set up Nito seeders yet: that's coming. Until then, follow the manual steps below.
+DigiNode Seeder sets up DigiByte (mainnet and testnet), Nito (mainnet) and Litecoin (mainnet and testnet) seeders. For anything else, such as Nito testnet, follow the manual steps below.
 
 ## Supported networks
 
@@ -26,8 +26,12 @@ DigiNode Seeder doesn't set up Nito seeders yet: that's coming. Until then, foll
 | `digibyte-testnet` | DigiByte testnet (v9, testnet26) | 12033 | protocol 70017 or later |
 | `nito` | Nito mainnet | 8820 | protocol 70017 and the `NITO_PRIVATE` service bit (Nito Core v4), block height 1,100,000 or more |
 | `nito-testnet` | Nito testnet (testnet3) | 8840 | protocol 70017 and `NITO_PRIVATE` |
+| `litecoin` | Litecoin mainnet | 9333 | protocol 70017 and the `MWEB` service bit (Litecoin Core v0.21), block height 3,150,000 or more |
+| `litecoin-testnet` | Litecoin testnet (testnet4) | 19335 | protocol 70017 and `MWEB` |
 
 `--testnet` switches to the chain's testnet, so `--chain nito --testnet` is the same as `--chain nito-testnet`.
+
+Litecoin Core prefers peers that support MWEB (its privacy extension) and asks seeds for `x1000009.<seed>` (network, witness and MWEB nodes), so the Litecoin seeder lists only MWEB nodes. MWEB uses the same service bit as Nito's private transactions, each on its own network.
 
 Nito Core v4 disconnects peers that aren't v4 once the v4 hard fork activates (mainnet block 1,165,432), so the Nito seeder lists only v4 nodes. It also advertises `NITO_PRIVATE` itself, so v4 nodes keep talking to it. Nito Core asks seeds for `x1000009.<seed>` (network, witness and private-transaction nodes), which the seeder answers.
 

@@ -19,7 +19,7 @@
 
 using namespace std;
 
-#define SEEDER_VERSION "0.2.1"
+#define SEEDER_VERSION "0.3.0"
 
 // Network settings (declared in protocol.h and db.h). main() fills them in
 // from the chosen chain, then from any options that override it.
@@ -32,6 +32,7 @@ uint64_t nRequireServices = 0;
 
 // Service bits that aren't in Bitcoin's list (protocol.h).
 static const uint64_t NODE_NITO_PRIVATE = (1 << 24); // Nito v4 private transactions
+static const uint64_t NODE_MWEB = (1 << 24);         // Litecoin MWEB (the same bit, on its own network)
 
 // Everything the seeder needs to know about one network. To add a chain,
 // add an entry to kChains: nothing else here is chain-specific.
@@ -102,6 +103,27 @@ static const std::vector<ChainParams> kChains = {
      "t3.testnet.nito.network",   // From Nito Core (maintainer not stated). Doesn't exist (NXDOMAIN). Checked 2026-11-18.
      "testnet-seed.nito.network", // From Nito Core (maintainer not stated). Doesn't exist (NXDOMAIN). Checked 2026-11-18.
      "testnetseed.nito.tools",    // @saltedlolly. DigiNode Seeder. Not live yet (2026-11-18).
+   },
+   {}},
+  // Litecoin Core v0.21 mainnet. Litecoin Core wants peers with NETWORK | WITNESS | MWEB and asks seeds for
+  // x1000009, so only MWEB nodes are listed. (It doesn't drop peers without MWEB, so the seeder needn't
+  // advertise it.) Minimum height: about 4 months before 2026-11-18 (block 3,215,405; 2.5-minute blocks).
+  // Litecoin Core's seed lines have no owners; its history only shows who last edited them.
+  {"litecoin", "Litecoin", "litecoin-testnet", "fbc0b6db", 9333, 3150000, 70017, NODE_MWEB, 0, NODE_MWEB,
+   {
+     "seed-a.litecoin.loshan.co.uk",  // In Litecoin Core (maintainer not stated). Seeder (23 nodes). Checked 2026-11-18.
+     "dnsseed.thrasher.io",           // In Litecoin Core (maintainer not stated). Seeder (25 nodes). Checked 2026-11-18.
+     "dnsseed.litecointools.com",     // In Litecoin Core (maintainer not stated). Doesn't exist (NXDOMAIN). Checked 2026-11-18.
+     "dnsseed.ltcpool.org",           // Updated in Litecoin Core by @DavidBurkett (2026-09-09). Seeder (24 nodes). Checked 2026-11-18.
+     "dnsseed.koin-project.com",      // In Litecoin Core (maintainer not stated). Fails (SERVFAIL). Checked 2026-11-18.
+   },
+   {}},
+  // Litecoin Core v0.21 testnet (testnet4).
+  {"litecoin-testnet", "Litecoin testnet", NULL, "fdd2c8f1", 19335, 0, 70017, NODE_MWEB, 0, NODE_MWEB,
+   {
+     "testnet-seed.litecointools.com",  // In Litecoin Core (maintainer not stated). Doesn't exist (NXDOMAIN). Checked 2026-11-18.
+     "seed-b.litecoin.loshan.co.uk",    // In Litecoin Core (maintainer not stated). Plain A record (1 node). Checked 2026-11-18.
+     "dnsseed-testnet.thrasher.io",     // In Litecoin Core (maintainer not stated). Seeder (5 nodes). Checked 2026-11-18.
    },
    {}},
 };
@@ -183,7 +205,8 @@ public:
                               "-k <ip:port>    IPV6 SOCKS5 proxy IP/Port\n"
                               "-w f1,f2,...    Allow these flag combinations as filters\n"
                               "--chain <id>    Network to seed (default digibyte):\n"
-                              "                digibyte, digibyte-testnet, nito, nito-testnet\n"
+                              "                digibyte, digibyte-testnet, nito, nito-testnet,\n"
+                              "                litecoin, litecoin-testnet\n"
                               "--testnet       Use the chain's testnet\n"
                               "--wipeban       Wipe list of banned nodes\n"
                               "--wipeignore    Wipe list of ignored nodes\n"
