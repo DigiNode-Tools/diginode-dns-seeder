@@ -51,7 +51,7 @@ struct ChainParams {
   std::vector<std::string> nodes;  // fixed IP addresses to start crawling from
 };
 
-// Each seed and fixed node is labelled: what it is, who maintains it (name and GitHub handle, where known), and
+// Each seed and fixed node is labelled: what it is, who maintains it (GitHub handle, where known), and
 // when it was last checked (and how it answered). DigiByte's owners are from DigiByte Core's chainparams.cpp.
 // Nito Core's seed lines have no owners; both mainnet seeds were added by @biigbang0001 (Nito Core v4).
 // Keep these up to date when the node software's lists change.
@@ -59,11 +59,11 @@ static const std::vector<ChainParams> kChains = {
   // DigiByte Core v8/v9 mainnet. Seeds as in DigiByte Core v9.26.7.
   {"digibyte", "DigiByte", "digibyte-testnet", "fac3b6da", 12024, 18701000, 70017, 0, 0, 0,
    {
-     "seed.digibyte.io",          // Jared Tate @JaredTate. Plain A record, not a seeder (1 node). Checked 2026-11-18.
-     "seed.diginode.tools",       // Olly Stedall @saltedlolly. DigiNode Seeder (24 nodes). Checked 2026-11-18.
-     "seed.digibyte.link",        // Bastian Driessen @bastiandriessen. Seeder (25 nodes). Checked 2026-11-18.
-     "seed.aroundtheblock.app",   // Mark McNiel @JohnnyLawDGB. Seeder (24 nodes). Checked 2026-11-18.
-     "seed.tuyul.cc",             // Mbah Jambon @mbah_jambon. Seeder (25 nodes). Checked 2026-11-18.
+     "seed.digibyte.io",          // @JaredTate. Plain A record, not a seeder (1 node). Checked 2026-11-18.
+     "seed.diginode.tools",       // @saltedlolly. DigiNode Seeder (24 nodes). Checked 2026-11-18.
+     "seed.digibyte.link",        // @bastiandriessen. Seeder (25 nodes). Checked 2026-11-18.
+     "seed.aroundtheblock.app",   // @JohnnyLawDGB. Seeder (24 nodes). Checked 2026-11-18.
+     "seed.tuyul.cc",             // @mbah_jambon. Seeder (25 nodes). Checked 2026-11-18.
    },
    // No fixed nodes: the five seeds above are enough. (81.153.89.168, a home connection added in 2017, was
    // removed on 2026-11-18: it no longer answers, and a home IP may now belong to someone else.)
@@ -72,10 +72,10 @@ static const std::vector<ChainParams> kChains = {
   // block 0. v8's testnet used fdc8bddd on port 12026 (minimum height 2755000).
   {"digibyte-testnet", "DigiByte testnet", NULL, "fec6b9e7", 12033, 0, 70017, 0, 0, 0,
    {
-     "testnetseed.digibyte.io",        // Jared Tate @JaredTate. Plain A record (1 node). Checked 2026-11-18.
-     "testnetseed.digibyte.link",      // Bastian Driessen @bastiandriessen. Seeder (1 node). Checked 2026-11-18.
-     "testnetseed.digibyte.services",  // Craig Donnachie @cdonnachie. Doesn't exist (NXDOMAIN). Checked 2026-11-18.
-     "testnetseed.diginode.tools",     // Olly Stedall @saltedlolly. DigiNode Seeder (9 nodes). Checked 2026-11-18.
+     "testnetseed.digibyte.io",        // @JaredTate. Plain A record (1 node). Checked 2026-11-18.
+     "testnetseed.digibyte.link",      // @bastiandriessen. Seeder (1 node). Checked 2026-11-18.
+     "testnetseed.digibyte.services",  // @cdonnachie. Doesn't exist (NXDOMAIN). Checked 2026-11-18.
+     "testnetseed.diginode.tools",     // @saltedlolly. DigiNode Seeder (9 nodes). Checked 2026-11-18.
    },
    {}},
   // Nito Core v4 mainnet. From the v4 hard fork (block 1,165,432) v4 nodes
@@ -86,10 +86,10 @@ static const std::vector<ChainParams> kChains = {
    {
      "seed.nito.network",         // Nito project (added to Nito Core by @biigbang0001). Plain A record (1 node). Checked 2026-11-18.
      "seed.nitopool.online",      // Nitopool (added to Nito Core by @biigbang0001). Plain A record (1 node). Checked 2026-11-18.
-     "seed.nito.tools",           // Olly Stedall @saltedlolly. DigiNode Seeder. Not live yet (2026-11-18).
+     "seed.nito.tools",           // @saltedlolly. DigiNode Seeder. Not live yet (2026-11-18).
    },
    {
-     "88.198.163.206",            // Olly Stedall @saltedlolly. explorer.nito.tools server, Nito Core v4.0.0. Checked 2026-11-18.
+     "88.198.163.206",            // @saltedlolly. explorer.nito.tools server, Nito Core v4.0.0. Checked 2026-11-18.
      "217.160.149.211",           // The node seed.nito.network points to (maintainer not stated). Checked 2026-11-18.
      "87.106.216.17",             // The node seed.nitopool.online points to (maintainer not stated). Checked 2026-11-18.
    }},
@@ -101,7 +101,7 @@ static const std::vector<ChainParams> kChains = {
      "t2.testnet.nito.network",   // From Nito Core (maintainer not stated). Doesn't exist (NXDOMAIN). Checked 2026-11-18.
      "t3.testnet.nito.network",   // From Nito Core (maintainer not stated). Doesn't exist (NXDOMAIN). Checked 2026-11-18.
      "testnet-seed.nito.network", // From Nito Core (maintainer not stated). Doesn't exist (NXDOMAIN). Checked 2026-11-18.
-     "testnetseed.nito.tools",    // Olly Stedall @saltedlolly. DigiNode Seeder. Not live yet (2026-11-18).
+     "testnetseed.nito.tools",    // @saltedlolly. DigiNode Seeder. Not live yet (2026-11-18).
    },
    {}},
 };
