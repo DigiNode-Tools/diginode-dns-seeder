@@ -102,13 +102,25 @@ public:
     return ret;
   }
   
-  bool IsGood() const {
+  // A node of the right kind: on the network's port, with the services, protocol and height required.
+  bool IsUsable() const {
     if (ip.GetPort() != GetDefaultPort()) return false;
     if (!(services & NODE_NETWORK)) return false;
     if ((services & nRequireServices) != nRequireServices) return false;
     if (!ip.IsRoutable()) return false;
     if (clientVersion && clientVersion < nRequireVersion) return false;
     if (blocks && blocks < GetRequireHeight()) return false;
+    return true;
+  }
+
+  // Usable, and answered its most recent check, within the last hour. Used to top up the answers while few
+  // nodes are good yet (a new seeder, or a small network): a node passes IsGood only once it has a record.
+  bool AnsweredRecently(int64 now) const {
+    return IsUsable() && ourLastSuccess && ourLastSuccess == ourLastTry && now - ourLastSuccess < 3600;
+  }
+
+  bool IsGood() const {
+    if (!IsUsable()) return false;
 
     if (total <= 3 && success * 2 >= total) return true;
 
