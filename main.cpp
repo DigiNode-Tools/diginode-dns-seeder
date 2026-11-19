@@ -19,7 +19,7 @@
 
 using namespace std;
 
-#define SEEDER_VERSION "0.3.1"
+#define SEEDER_VERSION "0.3.2"
 
 // Network settings (declared in protocol.h and db.h). main() fills them in
 // from the chosen chain, then from any options that override it.
@@ -94,17 +94,19 @@ static const std::vector<ChainParams> kChains = {
      "217.160.149.211",           // The node seed.nito.network points to (maintainer not stated). Checked 2026-11-18.
      "87.106.216.17",             // The node seed.nitopool.online points to (maintainer not stated). Checked 2026-11-18.
    }},
-  // Nito Core v4 testnet3 (private transactions active from block 0). No seed or node works yet, so a Nito
-  // testnet seeder needs --seed <node> to start.
+  // Nito Core v4 testnet3 (private transactions active from block 0). Nito Core's own testnet seeds don't
+  // exist, so the seeder starts from the fixed node below (and testnetseed.nito.tools once it's live).
   {"nito-testnet", "Nito testnet", NULL, "cd9b721a", 8840, 0, 70017, NODE_NITO_PRIVATE, NODE_NITO_PRIVATE, NODE_NITO_PRIVATE,
    {
      "t1.testnet.nito.network",   // From Nito Core (maintainer not stated). Doesn't exist (NXDOMAIN). Checked 2026-11-18.
      "t2.testnet.nito.network",   // From Nito Core (maintainer not stated). Doesn't exist (NXDOMAIN). Checked 2026-11-18.
      "t3.testnet.nito.network",   // From Nito Core (maintainer not stated). Doesn't exist (NXDOMAIN). Checked 2026-11-18.
      "testnet-seed.nito.network", // From Nito Core (maintainer not stated). Doesn't exist (NXDOMAIN). Checked 2026-11-18.
-     "testnetseed.nito.tools",    // @saltedlolly. DigiNode Seeder. Not live yet (2026-11-18).
+     "testnetseed.nito.tools",    // @saltedlolly. DigiNode Seeder. Not live yet (2026-11-19).
    },
-   {}},
+   {
+     "88.198.163.206",            // @saltedlolly. Testnet node on the explorer server (testnet-explorer.nito.tools), Nito Core v4.0.0. Checked 2026-11-19.
+   }},
   // Litecoin Core v0.21 mainnet. Litecoin Core wants peers with NETWORK | WITNESS | MWEB and asks seeds for
   // x1000009, so only MWEB nodes are listed. (It doesn't drop peers without MWEB, so the seeder needn't
   // advertise it.) Minimum height: about 4 months before 2026-11-18 (block 3,215,405; 2.5-minute blocks).
