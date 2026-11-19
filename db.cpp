@@ -164,27 +164,34 @@ void CAddrDb::Add_(const CAddress &addr, bool force) {
 }
 
 void CAddrDb::GetIPs_(set<CNetAddr>& ips, uint64_t requestedFlags, int max, const bool* nets) {
-  if (goodId.size() == 0) {
-    int id = -1;
-    if (ourId.size() == 0) {
-      if (unkId.size() == 0) return;
-      id = *unkId.begin();
-    } else {
-      id = *ourId.begin();
-    }
-    if (id >= 0 && (idToInfo[id].services & requestedFlags) == requestedFlags) {
-      ips.insert(idToInfo[id].ip);
-    }
-    return;
-  }
   std::vector<int> goodIdFiltered;
   for (std::set<int>::const_iterator it = goodId.begin(); it != goodId.end(); it++) {
     if ((idToInfo[*it].services & requestedFlags) == requestedFlags)
       goodIdFiltered.push_back(*it);
   }
 
-  if (!goodIdFiltered.size())
+  // Too few good nodes (a new seeder, or a small network such as Nito): also hand out usable nodes that
+  // answered their most recent check within the last hour. Without this, a new seeder hands out a single node
+  // for hours, once its nodes' first few checks are used up and before they've built a reliability record.
+  if (goodIdFiltered.size() < MIN_IP_RETURNED) {
+    int64 now = time(NULL);
+    for (std::map<int, CAddrInfo>::const_iterator it = idToInfo.begin(); it != idToInfo.end(); it++) {
+      if (goodId.count(it->first)) continue;
+      if ((it->second.services & requestedFlags) != requestedFlags) continue;
+      if (it->second.AnsweredRecently(now)) goodIdFiltered.push_back(it->first);
+    }
+  }
+
+  if (goodIdFiltered.empty()) {
+    // Nothing usable yet: hand out one known node, so a lookup isn't empty.
+    int id = -1;
+    if (!ourId.empty()) id = *ourId.begin();
+    else if (!unkId.empty()) id = *unkId.begin();
+    if (id >= 0 && (idToInfo[id].services & requestedFlags) == requestedFlags) {
+      ips.insert(idToInfo[id].ip);
+    }
     return;
+  }
 
   if(goodIdFiltered.size() <= MIN_IP_RETURNED)
     max = goodIdFiltered.size();
